@@ -5,6 +5,7 @@ using static MarketBasketAnalysis.Client.Domain.Mining.ItemsetConversionResult;
 
 namespace MarketBasketAnalysis.Client.Domain.Mining
 {
+    /// <inheritdoc />
     public sealed class ItemConverter : IItemConverter
     {
         #region Fields and Properties
@@ -15,6 +16,18 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
 
         #region Constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ItemConverter"/> class with the specified collection of conversion rules.
+        /// </summary>
+        /// <param name="conversionRules">
+        /// A collection of <see cref="ItemConversionRule"/> objects that define the rules for converting items.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="conversionRules"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown if <paramref name="conversionRules"/> contains <c>null</c> elements or duplicate rules.
+        /// </exception>
         public ItemConverter(IReadOnlyCollection<ItemConversionRule> conversionRules)
         {
             if (conversionRules == null)
@@ -39,6 +52,7 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
 
         #region Methods
 
+        /// <inheritdoc />
         public ItemsetConversionResult TryConvert(Item item1, Item item2,
             out Item convertedItem1, out Item convertedItem2)
         {
@@ -71,6 +85,7 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
             return ItemsetConverted;
         }
 
+        /// <inheritdoc />
         public bool TryGetGroupItem(Item item, out Item groupItem)
         {
             if (_replacementRules.TryGetValue(item, out var replacementRule))

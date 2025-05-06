@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace MarketBasketAnalysis.Client.Domain.Analysis
 {
+    /// <inheritdoc />
     public sealed class MaximalCliqueFinder : IMaximalCliqueFinder
     {
+        /// <inheritdoc />
         public Task<IReadOnlyCollection<IReadOnlyCollection<AssociationRule>>> FindAsync(
             IReadOnlyCollection<AssociationRule> associationRules, MaximalCliqueFindingParameters parameters,
             CancellationToken token = default)
@@ -17,6 +19,7 @@ namespace MarketBasketAnalysis.Client.Domain.Analysis
             return Task.Run((() => FindInternal(associationRules, parameters, token)), token);
         }
 
+        /// <inheritdoc />
         public IReadOnlyCollection<IReadOnlyCollection<AssociationRule>> Find(
             IReadOnlyCollection<AssociationRule> associationRules, MaximalCliqueFindingParameters parameters)
         {

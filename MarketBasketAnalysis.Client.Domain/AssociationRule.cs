@@ -2,50 +2,118 @@
 
 namespace MarketBasketAnalysis.Client.Domain
 {
+    /// <summary>
+    /// Represents an association rule - a relationship between two items in market basket analysis,
+    /// where the presence of one item (left hand side) implies the presence of another (right hand side).
+    /// </summary>
     public sealed class AssociationRule : IEquatable<AssociationRule>
     {
         #region Fields and Properties
 
-        private readonly int _handSidePairCount;
+        private readonly int _pairCount;
         private readonly int _transactionCount;
 
+        /// <summary>
+        /// Gets the left-hand side (LHS) of the association rule.
+        /// </summary>
         public AssociationRulePart LeftHandSide { get; }
 
+        /// <summary>
+        /// Gets the right-hand side (RHS) of the association rule.
+        /// </summary>
         public AssociationRulePart RightHandSide { get; }
 
-        public int Count => _handSidePairCount;
+        /// <summary>
+        /// Gets the number of transactions that contain both the LHS and RHS of the rule.
+        /// </summary>
+        public int PairCount => _pairCount;
 
-        public double Support => (double)_handSidePairCount / _transactionCount;
+        /// <summary>
+        /// Gets the support of the rule, which is the proportion of transactions that contain both the LHS and RHS.
+        /// </summary>
+        public double Support => (double)_pairCount / _transactionCount;
 
+        /// <summary>
+        /// Gets the confidence of the rule, which is the proportion of transactions containing the LHS that also contain the RHS.
+        /// </summary>
         public double Confidence => Support / LeftHandSide.Support;
 
+        /// <summary>
+        /// Gets the lift of the rule, which measures how much more likely the RHS is to occur given the LHS, compared to its baseline probability.
+        /// </summary>
         public double Lift => Confidence / RightHandSide.Support;
 
+        /// <summary>
+        /// Gets the conviction of the rule, which measures the strength of the implication in the rule.
+        /// </summary>
         public double Conviction => (1 - RightHandSide.Support) / (1 - Confidence);
 
-        public double YuleQCoefficient => CalculateOnContingencyTable((a, b, c, d) =>
-            (a * d - b * c) / (a * d + b * c));
+        /// <summary>
+        /// Gets the Yule's Q coefficient, which measures the association between the LHS and RHS.
+        /// </summary>
+        public double YuleQCoefficient
+        {
+            get
+            {
+                var (a, b, c, d) = GetContingencyTable();
 
-        public double PhiCorrelationCoefficient => CalculateOnContingencyTable((a, b, c, d) =>
-            (a * d - b * c) / Math.Sqrt((a + b) * (a + c) * (b + d) * (c + d)));
+                return (a * d - b * c) / (a * d + b * c);
+            }
+        }
 
-        public double ChiSquaredTestStatistic => CalculateOnContingencyTable((a, b, c, d) =>
-            (a + b + c + d) * Math.Pow(a * d - b * c, 2) / ((a + b) * (a + c) * (b + d) * (c + d)));
+        /// <summary>
+        /// Gets the Phi correlation coefficient, which measures the strength of the relationship between the LHS and RHS.
+        /// </summary>
+        public double PhiCorrelationCoefficient
+        {
+            get
+            {
+                var (a, b, c, d) = GetContingencyTable();
+
+                return (a * d - b * c) / Math.Sqrt((a + b) * (a + c) * (b + d) * (c + d));
+            }
+        }
+
+        /// <summary>
+        /// Gets the Chi-squared test statistic, which measures the independence of the LHS and RHS.
+        /// </summary>
+        public double ChiSquaredTestStatistic
+        {
+            get
+            {
+                var (a, b, c, d) = GetContingencyTable();
+
+                return (a + b + c + d) * Math.Pow(a * d - b * c, 2) / ((a + b) * (a + c) * (b + d) * (c + d));
+            }
+        }
 
         #endregion
 
         #region Constructors
 
-        public AssociationRule(Item leftHandSideItem, Item rightHandSideItem, int leftHandSideCount,
-            int rightHandSideCount, int handSidePairCount, int transactionCount)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssociationRule"/> class.
+        /// </summary>
+        /// <param name="lhsItem">The item on the left-hand side of the rule.</param>
+        /// <param name="rhsItem">The item on the right-hand side of the rule.</param>
+        /// <param name="lhsCount">The number of transactions containing the LHS item.</param>
+        /// <param name="rhsCount">The number of transactions containing the RHS item.</param>
+        /// <param name="pairCount">The number of transactions containing both the LHS and RHS items.</param>
+        /// <param name="transactionCount">The total number of transactions.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="lhsItem"/> or <paramref name="rhsItem"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if the LHS and RHS items are the same.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown if any of the counts are invalid (e.g., negative or greater than the total transaction count).
+        /// </exception>
+        public AssociationRule(Item lhsItem, Item rhsItem, int lhsCount, int rhsCount, int pairCount, int transactionCount)
         {
-            ValidateParameters(leftHandSideItem, rightHandSideItem, leftHandSideCount, rightHandSideCount,
-                handSidePairCount, transactionCount);
+            ValidateParameters(lhsItem, rhsItem, lhsCount, rhsCount,
+                pairCount, transactionCount);
 
-            LeftHandSide = new AssociationRulePart(leftHandSideItem, leftHandSideCount, transactionCount);
-            RightHandSide = new AssociationRulePart(rightHandSideItem, rightHandSideCount, transactionCount);
+            LeftHandSide = new AssociationRulePart(lhsItem, lhsCount, transactionCount);
+            RightHandSide = new AssociationRulePart(rhsItem, rhsCount, transactionCount);
 
-            _handSidePairCount = handSidePairCount;
+            _pairCount = pairCount;
             _transactionCount = transactionCount;
         }
 
@@ -53,16 +121,15 @@ namespace MarketBasketAnalysis.Client.Domain
 
         #region Methods
 
-        private static void ValidateParameters(Item leftHandSideItem, Item rightHandSideItem,
-            int leftHandSideCount, int rightHandSideCount, int handSidePairCount, int transactionCount)
+        private static void ValidateParameters(Item lhsItem, Item rhsItem, int lhsCount, int rhsCount, int pairCount, int transactionCount)
         {
-            if (leftHandSideItem == null)
-                throw new ArgumentNullException(nameof(leftHandSideItem));
+            if (lhsItem == null)
+                throw new ArgumentNullException(nameof(lhsItem));
 
-            if (rightHandSideItem == null)
-                throw new ArgumentNullException(nameof(rightHandSideItem));
+            if (rhsItem == null)
+                throw new ArgumentNullException(nameof(rhsItem));
 
-            if (leftHandSideItem.Equals(rightHandSideItem))
+            if (lhsItem.Equals(rhsItem))
                 throw new ArgumentException("Items of left and right hand sides cannot be the the same.");
 
             if (transactionCount <= 0)
@@ -71,42 +138,54 @@ namespace MarketBasketAnalysis.Client.Domain
                     "Transaction count must be greater than zero.");
             }
 
-            if (leftHandSideCount > transactionCount)
+            if (pairCount <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(leftHandSideCount), leftHandSideCount,
-                    "Left hand side count cannot be greater than transaction count.");
+                throw new ArgumentOutOfRangeException(nameof(pairCount), pairCount,
+                    "Pair count must be greater than zero.");
             }
 
-            if (rightHandSideCount > transactionCount)
+            if (lhsCount > transactionCount)
             {
-                throw new ArgumentOutOfRangeException(nameof(rightHandSideCount), rightHandSideCount,
-                    "Right hand side count cannot be greater than transaction count.");
+                throw new ArgumentOutOfRangeException(nameof(lhsCount), lhsCount,
+                    "LHS count cannot be greater than transaction count.");
             }
 
-            if (handSidePairCount > Math.Min(leftHandSideCount, rightHandSideCount))
+            if (rhsCount > transactionCount)
             {
-                throw new ArgumentOutOfRangeException(nameof(handSidePairCount), handSidePairCount,
-                    "Hand side pair count cannot be greater than the minimum of left hand side count and right hand side count.");
+                throw new ArgumentOutOfRangeException(nameof(rhsCount), rhsCount,
+                    "RHS count cannot be greater than transaction count.");
+            }
+
+            if (pairCount > Math.Min(lhsCount, rhsCount))
+            {
+                throw new ArgumentOutOfRangeException(nameof(pairCount), pairCount,
+                    "Pair count cannot be greater than the minimum of LHS count and RHS count.");
             }
         }
 
-        private double CalculateOnContingencyTable(Func<double, double, double, double, double> func)
+        private (double a, double b, double c, double d) GetContingencyTable()
         {
-            var a = _handSidePairCount;
-            var b = LeftHandSide.Count - _handSidePairCount;
-            var c = RightHandSide.Count - _handSidePairCount;
+            var a = _pairCount;
+            var b = LeftHandSide.Count - _pairCount;
+            var c = RightHandSide.Count - _pairCount;
             var d = _transactionCount - a - b - c;
 
-            return func(a, b, c, d);
+            return (a, b, c, d);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode() =>
             LeftHandSide.GetHashCode() * 397 ^ RightHandSide.GetHashCode();
 
-        public override bool Equals(object obj) =>
-            Equals(obj as AssociationRule);
+        /// <inheritdoc />
+        bool IEquatable<AssociationRule>.Equals(AssociationRule other) =>
+            EqualsInternal(other);
 
-        public bool Equals(AssociationRule other)
+        /// <inheritdoc />
+        public override bool Equals(object obj) =>
+            EqualsInternal(obj as AssociationRule);
+
+        private bool EqualsInternal(AssociationRule other)
         {
             if (ReferenceEquals(null, other))
                 return false;
@@ -118,6 +197,7 @@ namespace MarketBasketAnalysis.Client.Domain
                    RightHandSide.Equals(other.RightHandSide);
         }
 
+        /// <inheritdoc />
         public override string ToString() =>
             $"{LeftHandSide} -> {RightHandSide}";
 

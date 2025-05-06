@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace MarketBasketAnalysis.Client.Domain.Mining
 {
+    /// <inheritdoc />
     public class ItemExcluder : IItemExcluder
     {
         #region Fields and Properties
@@ -18,6 +19,19 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
 
         #region Constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ItemExcluder"/> class with the specified collection of exclusion rules.
+        /// </summary>
+        /// <param name="exclusionRules">
+        /// A collection of <see cref="ItemExclusionRule"/> objects that define the rules for excluding items.
+        /// Each rule specifies the criteria for determining whether an item should be excluded.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="exclusionRules"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown if <paramref name="exclusionRules"/> contains <c>null</c> elements.
+        /// </exception>
         public ItemExcluder(IReadOnlyCollection<ItemExclusionRule> exclusionRules)
         {
             if (exclusionRules == null)
@@ -39,6 +53,7 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
 
         #region Methods
 
+        /// <inheritdoc />
         public bool ShouldExclude(Item item)
         {
             if (item == null)

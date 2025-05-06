@@ -11,18 +11,22 @@ using Timer = System.Timers.Timer;
 
 namespace MarketBasketAnalysis.Client.Domain.Mining
 {
+    /// <inheritdoc />
     public sealed class Miner : IMiner
     {
         #region Fields and Properties
 
+        /// <inheritdoc />
         public event EventHandler<double> MiningProgressChanged;
 
+        /// <inheritdoc />
         public event EventHandler<MiningStage> MiningStageChanged;
 
         #endregion
 
         #region Methods
 
+        /// <inheritdoc />
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public Task<IReadOnlyCollection<AssociationRule>> MineAsync(IEnumerable<Item[]> transactions,
             MiningParameters parameters, CancellationToken token = default)
@@ -32,6 +36,7 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
             return Task.Run((() => MineInternal(transactions, parameters, token)), token);
         }
 
+        /// <inheritdoc />
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public IReadOnlyCollection<AssociationRule> Mine(IEnumerable<Item[]> transactions,
             MiningParameters parameters)
@@ -41,8 +46,7 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
             return MineInternal(transactions, parameters, default);
         }
 
-        private static void ValidateParameters(IEnumerable<Item[]> transactions,
-            MiningParameters parameters)
+        private static void ValidateParameters(IEnumerable<Item[]> transactions, MiningParameters parameters)
         {
             if (transactions == null)
                 throw new ArgumentNullException(nameof(transactions));

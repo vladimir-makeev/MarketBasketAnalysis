@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace MarketBasketAnalysis.Client.Domain.Analysis
 {
+    /// <inheritdoc />
     public sealed class SetOperationsPerformer : ISetOperationsPerformer
     {
         #region Nested types
@@ -43,6 +44,7 @@ namespace MarketBasketAnalysis.Client.Domain.Analysis
 
         #region Methods
 
+        /// <inheritdoc />
         public IReadOnlyCollection<AssociationRule> Except(IReadOnlyCollection<AssociationRule> first,
             IReadOnlyCollection<AssociationRule> second, bool ignoreLinkDirection = false)
         {
@@ -54,6 +56,7 @@ namespace MarketBasketAnalysis.Client.Domain.Analysis
                 .ToList();
         }
 
+        /// <inheritdoc />
         public IReadOnlyCollection<AssociationRule> Intersect(IReadOnlyCollection<AssociationRule> first,
             IReadOnlyCollection<AssociationRule> second, bool ignoreLinkDirection = false)
         {
