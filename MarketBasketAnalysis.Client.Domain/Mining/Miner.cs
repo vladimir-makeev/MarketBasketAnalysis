@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
-using static MarketBasketAnalysis.Client.Domain.Mining.ItemsetConversionResult;
 using Timer = System.Timers.Timer;
 
 namespace MarketBasketAnalysis.Client.Domain.Mining
@@ -94,17 +93,17 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
                         if (parameters.ItemExcluder?.ShouldExclude(item) ?? false)
                             continue;
 
-                        var resultItem = item;
+                        var result = item;
 
-                        if (parameters.ItemConverter?.TryGetGroupItem(item, out var groupItem) ?? false)
+                        if (parameters.ItemConverter?.ShouldReplaceWithGroup(item, out var group) ?? false)
                         {
-                            if (parameters.ItemExcluder?.ShouldExclude(groupItem) ?? false)
+                            if (parameters.ItemExcluder?.ShouldExclude(group) ?? false)
                                 continue;
 
-                            resultItem = groupItem;
+                            result = group;
                         }
 
-                        itemFrequencies.AddOrUpdate(resultItem, 1, (_, itemFrequency) => itemFrequency + 1);
+                        itemFrequencies.AddOrUpdate(result, 1, (_, frequency) => frequency + 1);
                     }
 
                     Interlocked.Increment(ref transactionCountInternal);
@@ -148,25 +147,26 @@ namespace MarketBasketAnalysis.Client.Domain.Mining
                         for (var i = 0; i < transaction.Length; i++)
                             for (var j = i + 1; j < transaction.Length; j++)
                             {
-                                var (resultItem1, resultItem2) = transaction[i].Id < transaction[j].Id
-                                        ? (transaction[i], transaction[j])
-                                        : (transaction[j], transaction[i]);
+                                var (item1, item2) = transaction[i].Id < transaction[j].Id
+                                    ? (transaction[i], transaction[j])
+                                    : (transaction[j], transaction[i]);
 
                                 if (parameters.ItemConverter != null)
                                 {
-                                    var conversionResult = parameters.ItemConverter.TryConvert(resultItem1, resultItem2,
-                                        out var convertedItem1, out var convertedItem2);
+                                    item1 = parameters.ItemConverter.ShouldReplaceWithGroup(item1, out var item1Group)
+                                        ? item1Group
+                                        : item1;
+                                    item2 = parameters.ItemConverter.ShouldReplaceWithGroup(item2, out var item2Group)
+                                        ? item2Group
+                                        : item2;
 
-                                    if (conversionResult == ConvertedItemsetHasSameItems)
+                                    if (item1.Equals(item2))
                                         continue;
-
-                                    resultItem1 = convertedItem1;
-                                    resultItem2 = convertedItem2;
                                 }
 
-                                if (frequentItems.ContainsKey(resultItem1) && frequentItems.ContainsKey(resultItem2))
+                                if (frequentItems.ContainsKey(item1) && frequentItems.ContainsKey(item2))
                                 {
-                                    itemsetFrequencies.AddOrUpdate((resultItem1, resultItem2), 1,
+                                    itemsetFrequencies.AddOrUpdate((item1, item2), 1,
                                         (_, itemsetFrequency) => itemsetFrequency + 1);
                                 }
                             }
