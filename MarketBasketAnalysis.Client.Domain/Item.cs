@@ -48,14 +48,7 @@ namespace MarketBasketAnalysis.Client.Domain
         #region Methods
 
         /// <inheritdoc />
-        bool IEquatable<Item>.Equals(Item other) =>
-            EqualsInternal(other);
-
-        /// <inheritdoc />
-        public override bool Equals(object obj) =>
-            EqualsInternal(obj as Item);
-
-        private bool EqualsInternal(Item other)
+        public bool Equals(Item other)
         {
             if (ReferenceEquals(null, other))
                 return false;
@@ -65,6 +58,10 @@ namespace MarketBasketAnalysis.Client.Domain
 
             return Id == other.Id;
         }
+
+        /// <inheritdoc />
+        public override bool Equals(object obj) =>
+            Equals(obj as Item);
 
         /// <inheritdoc />
         public override int GetHashCode() =>

@@ -174,18 +174,7 @@ namespace MarketBasketAnalysis.Client.Domain
         }
 
         /// <inheritdoc />
-        public override int GetHashCode() =>
-            LeftHandSide.GetHashCode() * 397 ^ RightHandSide.GetHashCode();
-
-        /// <inheritdoc />
-        bool IEquatable<AssociationRule>.Equals(AssociationRule other) =>
-            EqualsInternal(other);
-
-        /// <inheritdoc />
-        public override bool Equals(object obj) =>
-            EqualsInternal(obj as AssociationRule);
-
-        private bool EqualsInternal(AssociationRule other)
+        public bool Equals(AssociationRule other)
         {
             if (ReferenceEquals(null, other))
                 return false;
@@ -196,6 +185,14 @@ namespace MarketBasketAnalysis.Client.Domain
             return LeftHandSide.Equals(other.LeftHandSide) &&
                    RightHandSide.Equals(other.RightHandSide);
         }
+
+        /// <inheritdoc />
+        public override int GetHashCode() =>
+            LeftHandSide.GetHashCode() * 397 ^ RightHandSide.GetHashCode();
+
+        /// <inheritdoc />
+        public override bool Equals(object obj) =>
+            Equals(obj as AssociationRule);
 
         /// <inheritdoc />
         public override string ToString() =>
